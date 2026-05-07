@@ -1,0 +1,32 @@
+{
+  "name": "interview-intelligence-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "next dev",
+    "desktop": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "next": "^16.2.4",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "concurrently": "^9.1.0",
+    "electron": "^33.3.1",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "^16.2.4",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "wait-on": "^8.0.1"
+  }
+}
