@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        inter: ["Inter", "sans-serif"],
-        fraunces: ["Fraunces", "serif"],
+        inter: ["var(--font-inter)", "sans-serif"],
+        fraunces: ["var(--font-fraunces)", "serif"],
       },
       colors: {
         ink: "#171717",

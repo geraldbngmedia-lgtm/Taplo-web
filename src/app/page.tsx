@@ -12,9 +12,9 @@ import {
   Mic,
   Pause,
   Play,
-  ShieldCheck,
   Square,
 } from "lucide-react";
+import { LandingPage } from "@/components/LandingPage";
 import { InsightCard } from "@/components/InsightCard";
 import { TranscriptPanel } from "@/components/TranscriptPanel";
 import { EmptyState, Field, Section, inputClass, textAreaClass } from "@/components/ui";
@@ -46,10 +46,10 @@ type WorkspaceAccount = {
   createdAt: string;
 };
 
-type AuthScreen = "landing" | "onboarding";
-
 const accountStorageKey = "interview-intelligence-account";
 const calendarSetupStorageKey = "interview-intelligence-calendar-setup";
+const landingStorageKey = "interview-intelligence-landing-seen";
+const openaiKeyStorageKey = "interview-intelligence-openai-key";
 
 const navigation: { id: Screen; labelKey: TranslationKey; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", labelKey: "dashboard", icon: LayoutDashboard },
@@ -59,8 +59,9 @@ const navigation: { id: Screen; labelKey: TranslationKey; icon: typeof LayoutDas
 ];
 
 export default function Home() {
+  const [hasSeenLanding, setHasSeenLanding] = useState(false);
+  const [openaiApiKey, setOpenaiApiKey] = useState("");
   const [account, setAccount] = useState<WorkspaceAccount | null>(null);
-  const [authScreen, setAuthScreen] = useState<AuthScreen>("landing");
   const [accountForm, setAccountForm] = useState({
     name: "",
     email: "",
@@ -147,6 +148,8 @@ export default function Home() {
         setCalendarSetupChoice(savedSetupChoice);
         setActiveScreen("meetings");
       }
+      setHasSeenLanding(!!window.localStorage.getItem(landingStorageKey));
+      setOpenaiApiKey(window.localStorage.getItem(openaiKeyStorageKey) ?? "");
       setHasLoadedStorage(true);
     }, 0);
 
@@ -199,6 +202,9 @@ export default function Home() {
 
     setAccount(nextAccount);
     window.localStorage.setItem(accountStorageKey, JSON.stringify(nextAccount));
+    if (openaiApiKey.trim()) {
+      window.localStorage.setItem(openaiKeyStorageKey, openaiApiKey.trim());
+    }
   }
 
   function addMeeting() {
@@ -278,6 +284,11 @@ export default function Home() {
   function persistCalendarSetupChoice(provider: CalendarProvider) {
     setCalendarSetupChoice(provider);
     window.localStorage.setItem(calendarSetupStorageKey, provider);
+  }
+
+  function handleGetStarted() {
+    setHasSeenLanding(true);
+    window.localStorage.setItem(landingStorageKey, "1");
   }
 
   async function disconnectCalendar(provider: CalendarProvider) {
@@ -437,7 +448,7 @@ export default function Home() {
         let output: GeneratedOutput;
         try {
           setTranscriptionStatus("Transcribing interview with Whisper...");
-          transcript = await transcribeAudioWithWhisper({ audioBlob: blob, sessionId });
+          transcript = await transcribeAudioWithWhisper({ audioBlob: blob, sessionId, apiKey: openaiApiKey || undefined });
           if (!transcript.length) {
             throw new Error("Whisper returned no transcript segments.");
           } else {
@@ -446,6 +457,7 @@ export default function Home() {
           output = await analyzeInterviewWithOpenAI({
             session: { ...session, status: "analyzed" },
             transcriptSegments: transcript,
+            apiKey: openaiApiKey || undefined,
           });
           setTranscriptionStatus("Transcription and analysis complete.");
         } catch (error) {
@@ -529,16 +541,23 @@ export default function Home() {
       }, 1000);
   }
 
+  if (!hasLoadedStorage) {
+    return <div className="min-h-screen bg-taploCanvas" />;
+  }
+
+  if (!hasSeenLanding && !account) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
+
   if (!account) {
-    return authScreen === "onboarding" ? (
+    return (
       <OnboardingPage
         accountForm={accountForm}
         setAccountForm={setAccountForm}
         createAccount={createAccount}
-        goBack={() => setAuthScreen("landing")}
+        openaiApiKey={openaiApiKey}
+        setOpenaiApiKey={setOpenaiApiKey}
       />
-    ) : (
-      <LandingPage startOnboarding={() => setAuthScreen("onboarding")} />
     );
   }
 
@@ -692,348 +711,23 @@ export default function Home() {
   );
 }
 
-function LandingPage({ startOnboarding }: { startOnboarding: () => void }) {
-  const workflow = [
-    ["Add the interview", "Connect calendar or paste a meeting link manually. No projects, roles, or candidate records required."],
-    ["Attach the job description", "Paste the JD directly onto the meeting so analysis is grounded in the actual role context."],
-    ["Record and review", "Join the meeting, confirm recording consent, record from the desktop panel, then review transcript-backed analysis."],
-  ];
-  const insights = [
-    "Job description attached",
-    "Consent confirmation required before recording",
-    "Whisper transcript and analysis generated after stop",
-  ];
-  const faqs = [
-    ["What does the app actually do?", "Taplo lets recruiters create or sync interview meetings, attach a job description, record with consent, transcribe audio with Whisper, and generate structured interview analysis."],
-    ["Do I need to create projects or candidates?", "No. The current workflow is meeting-first. Paste a meeting link, add the JD, join, record, and review analysis."],
-    ["Is Taplo a hiring decision engine?", "No. Taplo does not score, rank, recommend, or decide. It produces evidence-based notes and follow-up material."],
-    ["Can I use it without calendar OAuth?", "Yes. Manual setup is fully supported. Calendar OAuth is optional for importing upcoming meetings."],
-    ["When is the account created?", "After downloading and opening the desktop app. The landing page is for downloading the app, not creating a web account."],
-  ];
-
-  return (
-    <main className="min-h-screen bg-[#f7f4ee] text-[#151515]">
-      <div className="border-b border-black/10 bg-[#f0ebe2] px-5 py-2 text-center text-sm font-medium text-black/70">
-        Desktop account setup happens after download. Open Taplo to create your workspace.
-      </div>
-      <header className="sticky top-0 z-40 border-b border-black/10 bg-[#f7f4ee]/88 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <Image
-            alt="Taplo"
-            className="h-8 w-auto object-contain"
-            height={72}
-            src="/brand/taplo-logo-full-color.png"
-            width={3000}
-          />
-          <nav className="hidden items-center gap-6 text-sm font-semibold text-black/58 md:flex">
-            <a className="transition hover:text-black" href="#product">Product</a>
-            <a className="transition hover:text-black" href="#workflow">Workflow</a>
-            <a className="transition hover:text-black" href="#privacy">Privacy</a>
-            <a className="transition hover:text-black" href="#faq">FAQ</a>
-          </nav>
-          <button
-            className="rounded-full bg-[#151515] px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
-            onClick={startOnboarding}
-            type="button"
-          >
-            Get the desktop app
-          </button>
-        </div>
-      </header>
-
-      <section className="mx-auto grid min-h-[calc(100vh-106px)] max-w-7xl content-center px-5 py-16 text-center">
-        <p className="text-sm font-semibold text-black/58">Desktop interview recorder and analysis workspace for recruiters</p>
-        <h1 className="mx-auto mt-5 max-w-5xl text-6xl font-semibold leading-[0.95] tracking-[-0.04em] text-[#111] md:text-8xl">
-          Record interviews.
-          <span className="block">Generate structured notes.</span>
-        </h1>
-        <p className="mx-auto mt-7 max-w-3xl text-xl leading-8 text-black/62">
-          Paste a meeting link or sync your calendar, attach the job description, record with participant consent, transcribe with Whisper, and review evidence-based recruiter analysis.
-        </p>
-        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#151515] px-6 py-3 text-sm font-semibold text-white shadow-lift transition hover:bg-black"
-            onClick={startOnboarding}
-            type="button"
-          >
-            Get the desktop app <ArrowRight size={17} />
-          </button>
-          <p className="text-sm font-medium text-black/48">Create your account inside the desktop app.</p>
-        </div>
-        <div id="product" className="mx-auto mt-12 grid w-full max-w-6xl gap-4 rounded-[2rem] border border-black/10 bg-white p-4 text-left shadow-lift lg:grid-cols-[0.92fr_1.08fr]">
-          <div className="rounded-[1.35rem] border border-black/10 bg-[#f9fafb] p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-taploBlue">Meeting page</p>
-                <h2 className="mt-2 text-xl font-semibold">https://meet.google.com/abc-defg-hij</h2>
-              </div>
-              <span className="rounded-full bg-taploCoral px-3 py-1 text-xs font-semibold text-white">Ready</span>
-            </div>
-            <div className="mt-5 rounded-xl border border-black/10 bg-white p-4">
-              <p className="text-sm font-semibold text-black">Job description</p>
-              <p className="mt-3 text-sm leading-6 text-black/62">
-                Senior Cloud Engineer role requiring AWS, migration planning, stakeholder communication, and production ownership.
-              </p>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {["Meeting link", "JD", "Output language"].map((label) => (
-                <div key={label} className="rounded-xl border border-black/10 bg-white px-3 py-3 text-center text-sm font-semibold text-black/68">
-                  {label}
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-xl border border-black/10 bg-white p-3 text-sm text-black/50">
-              Click Join meeting to open the call and show the recorder panel.
-            </div>
-          </div>
-          <div className="grid gap-4">
-            <div className="rounded-[1.35rem] border border-black/10 bg-[#f9fafb] p-4">
-              <p className="text-sm font-semibold text-black">Interview setup status</p>
-              <div className="mt-4 grid gap-3">
-                {insights.map((item) => (
-                  <p key={item} className="rounded-xl border border-black/10 bg-white px-3 py-3 text-sm leading-6 text-black/62">
-                    {item}
-                  </p>
-                ))}
-              </div>
-            </div>
-            <div className="rounded-[1.35rem] border border-black/10 bg-[#f9fafb] p-4">
-              <p className="text-sm font-semibold text-black">Generated analysis preview</p>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                {[
-                  ["Role evidence", "Transcript-backed observations."],
-                  ["Missing areas", "Topics not clearly discussed."],
-                  ["Follow-ups", "Suggested questions after review."],
-                ].map(([title, body]) => (
-                  <div key={title} className="rounded-xl border border-black/10 bg-white p-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-taploCoral">{title}</p>
-                    <p className="mt-2 text-sm leading-6 text-black/60">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="workflow" className="border-y border-black/10 bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-20">
-          <h2 className="mx-auto max-w-4xl text-center text-5xl font-semibold tracking-[-0.035em] text-[#111] md:text-7xl">
-            The workflow your app supports
-          </h2>
-          <div className="mt-12 grid gap-4 lg:grid-cols-3">
-            {workflow.map(([title, body]) => (
-              <article key={title} className="rounded-[1.5rem] border border-black/10 bg-[#f7f4ee] p-5">
-                <div className="mb-6 rounded-[1.15rem] border border-black/10 bg-white p-4 shadow-soft">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-semibold text-black">00:00</span>
-                    <span className="rounded-full bg-taploBlue px-3 py-1 text-xs font-semibold text-white">MVP</span>
-                  </div>
-                  <div className="mt-4 h-24 rounded-xl bg-[#f1f5f9] p-3 text-sm leading-6 text-black/56">
-                    {body}
-                  </div>
-                </div>
-                <h3 className="text-2xl font-semibold tracking-[-0.02em] text-black">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-black/58">{body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <h2 className="mx-auto max-w-4xl text-center text-5xl font-semibold tracking-[-0.035em] md:text-7xl">
-          Analysis outputs after recording
-        </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-center text-lg leading-7 text-black/58">
-          Once recording stops, the app sends audio for Whisper transcription and then generates structured recruiter analysis from transcript evidence.
-        </p>
-        <div className="mt-12 grid gap-5 lg:grid-cols-3">
-          {["Transcript", "Structured insights", "Recruiter outputs"].map((title, index) => (
-            <article key={title} className="rounded-[1.5rem] border border-black/10 bg-white p-5 shadow-soft">
-              <p className="text-sm font-semibold text-black">{title}</p>
-              <div className="mt-5 grid gap-3">
-                {[0, 1, 2, 3].map((item) => (
-                  <div key={item} className={`h-3 rounded-full ${index === 0 ? "bg-black/10" : "bg-black/15"}`} />
-                ))}
-                <p className="rounded-xl bg-[#f7f4ee] p-4 text-sm leading-6 text-black/58">
-                  {index === 0
-                    ? "00:12 Candidate described leading migration planning."
-                    : index === 1
-                    ? "Technical signals, role evidence, unclear areas, missing information, and follow-ups."
-                    : "Candidate summary, client submission draft, follow-up email draft, and internal notes."}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="privacy" className="border-y border-black/10 bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-20">
-          <h2 className="mx-auto max-w-4xl text-center text-5xl font-semibold tracking-[-0.035em] md:text-7xl">
-            Consent-first desktop recording
-          </h2>
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {[
-              ["Consent gate", "The recorder requires confirmation that all participants have agreed to be recorded."],
-              ["Desktop control panel", "The app opens the meeting link externally and keeps record, pause, stop, notes, and status in a small panel."],
-              ["No hiring decisions", "Taplo never ranks candidates, assigns scores, or recommends hire/reject decisions."],
-            ].map(([title, body]) => (
-              <article key={title} className="rounded-[1.5rem] border border-black/10 bg-[#f7f4ee] p-6">
-                <ShieldCheck className="text-taploBlue" size={24} />
-                <h3 className="mt-5 text-2xl font-semibold tracking-[-0.02em]">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-black/58">{body}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <h2 className="text-5xl font-semibold tracking-[-0.035em] md:text-7xl">
-              Calendar-first or manual
-            </h2>
-            <p className="mt-5 text-lg leading-7 text-black/58">
-              Start with the setup path that fits your workflow. Use manual meeting links immediately, or connect calendar OAuth when configured.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {["Manual meeting link", "Google Calendar", "Outlook Calendar", "Teams calendar", "Google Meet link", "Microsoft Teams link"].map((tool) => (
-              <div key={tool} className="rounded-2xl border border-black/10 bg-white p-5 text-lg font-semibold shadow-soft">
-                {tool}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y border-black/10 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-20 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <div className="rounded-[1.5rem] border border-black/10 bg-[#f7f4ee] p-5">
-            <div className="rounded-[1.15rem] bg-white p-4 shadow-soft">
-              <p className="text-sm font-semibold">Transcript review</p>
-              <div className="mt-4 grid gap-3">
-                {["Recruiter", "Candidate", "Recruiter"].map((speaker, index) => (
-                  <div key={`${speaker}-${index}`} className="rounded-xl bg-[#f1f5f9] p-3 text-sm leading-6 text-black/58">
-                    <span className="font-semibold text-black">{speaker}</span> · {index === 1 ? "I led a migration across four services." : "Can you share the scope of that project?"}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div>
-            <h2 className="text-5xl font-semibold tracking-[-0.035em] md:text-7xl">Real transcription, real usage tracking</h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              {[
-                ["2", "Output languages", "English and Swedish analysis output support."],
-                ["$0.006", "Per minute", "Estimated transcription cost."],
-                ["$0.03", "Per interview", "Estimated AI analysis cost."],
-              ].map(([value, label, body]) => (
-                <div key={label}>
-                  <p className="text-4xl font-semibold tracking-[-0.03em]">{value}</p>
-                  <p className="mt-2 text-sm font-semibold">{label}</p>
-                  <p className="mt-1 text-sm leading-6 text-black/55">{body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="faq" className="mx-auto max-w-4xl px-5 py-20">
-        <h2 className="text-center text-5xl font-semibold tracking-[-0.035em] md:text-7xl">Frequently asked questions</h2>
-        <div className="mt-10 divide-y divide-black/10 rounded-[1.5rem] border border-black/10 bg-white">
-          {faqs.map(([question, answer]) => (
-            <article key={question} className="p-6">
-              <h3 className="text-xl font-semibold tracking-[-0.02em]">{question}</h3>
-              <p className="mt-3 text-sm leading-6 text-black/58">{answer}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-20 text-center">
-        <h2 className="mx-auto max-w-4xl text-5xl font-semibold leading-none tracking-[-0.04em] md:text-8xl">
-          Download the desktop app and run your first interview.
-        </h2>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-7 text-black/58">
-          Create your desktop account, choose calendar or manual setup, paste a meeting link, add the JD, record with consent, and review structured analysis.
-        </p>
-        <button
-          className="mt-9 inline-flex items-center justify-center gap-2 rounded-full bg-[#151515] px-6 py-3 text-sm font-semibold text-white shadow-lift transition hover:bg-black"
-          onClick={startOnboarding}
-          type="button"
-        >
-          Get the desktop app <ArrowRight size={17} />
-        </button>
-      </section>
-
-      <footer className="border-t border-black/10 bg-white">
-        <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 md:grid-cols-[1fr_2fr]">
-          <div>
-            <Image
-              alt="Taplo"
-              className="h-8 w-auto object-contain"
-              height={72}
-              src="/brand/taplo-logo-full-color.png"
-              width={3000}
-            />
-            <p className="mt-4 max-w-sm text-sm leading-6 text-black/52">
-              Recruiter interview intelligence. Understanding only, never hiring decisions.
-            </p>
-          </div>
-          <div className="grid gap-6 text-sm sm:grid-cols-3">
-            <div>
-              <p className="font-semibold">Product</p>
-              <div className="mt-3 grid gap-2 text-black/52">
-                <a href="#workflow">Workflow</a>
-                <a href="#privacy">Consent</a>
-                <a href="#faq">FAQ</a>
-              </div>
-            </div>
-            <div>
-              <p className="font-semibold">Support</p>
-              <div className="mt-3 grid gap-2 text-black/52">
-                <span>Help center</span>
-                <span>Contact</span>
-                <span>Status</span>
-              </div>
-            </div>
-            <div>
-              <p className="font-semibold">Legal</p>
-              <div className="mt-3 grid gap-2 text-black/52">
-                <span>Privacy</span>
-                <span>Terms</span>
-                <span>Subprocessors</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </main>
-  );
-}
-
 function OnboardingPage({
   accountForm,
   setAccountForm,
   createAccount,
-  goBack,
+  openaiApiKey,
+  setOpenaiApiKey,
 }: {
   accountForm: { name: string; email: string; company: string };
   setAccountForm: (value: { name: string; email: string; company: string }) => void;
   createAccount: () => void;
-  goBack: () => void;
+  openaiApiKey: string;
+  setOpenaiApiKey: (value: string) => void;
 }) {
   return (
     <main className="grid min-h-screen bg-[#f7f4ee] px-5 py-8 text-[#151515] lg:grid-cols-[0.9fr_1.1fr]">
       <section className="mx-auto flex w-full max-w-lg flex-col justify-between">
-        <button className="w-fit text-sm font-semibold text-black/55 hover:text-black" onClick={goBack} type="button">
-          Back
-        </button>
+        <div />
         <div className="py-12">
           <Image
             alt="Taplo"
@@ -1042,9 +736,9 @@ function OnboardingPage({
             src="/brand/taplo-logo-full-color.png"
             width={3000}
           />
-          <h1 className="mt-8 text-5xl font-semibold leading-none tracking-[-0.035em]">Set up your desktop workspace.</h1>
+          <h1 className="mt-8 text-5xl font-semibold leading-none tracking-[-0.035em]">Set up your workspace.</h1>
           <p className="mt-5 text-base leading-7 text-black/58">
-            This step happens after opening the desktop app. The MVP creates a local account on this machine; cloud authentication can be added when the backend is deployed.
+            Your account is stored locally on this machine. No sign-in or internet connection is needed to get started.
           </p>
         </div>
       </section>
@@ -1084,9 +778,30 @@ function OnboardingPage({
                 placeholder="Taplo"
               />
             </label>
+            <label className="grid gap-2 text-sm font-semibold text-black/72">
+              OpenAI API key
+              <input
+                className="rounded-md border border-black/10 bg-[#f9fafb] px-3 py-3 text-black outline-none placeholder:text-black/35 focus:border-taploBlue"
+                value={openaiApiKey}
+                onChange={(event) => setOpenaiApiKey(event.target.value)}
+                placeholder="sk-proj-…"
+                type="password"
+              />
+              <span className="text-xs font-normal text-black/40">
+                Used locally for transcription and analysis. Never shared.{" "}
+                <a
+                  className="text-taploCoral underline-offset-2 hover:underline"
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Get your key here
+                </a>
+              </span>
+            </label>
             <button
               className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[#151515] px-4 py-3 text-sm font-semibold text-white transition hover:bg-black disabled:bg-black/10 disabled:text-black/35"
-              disabled={!accountForm.name || !accountForm.email || !accountForm.company}
+              disabled={!accountForm.name || !accountForm.email || !accountForm.company || !openaiApiKey.trim()}
               onClick={createAccount}
               type="button"
             >

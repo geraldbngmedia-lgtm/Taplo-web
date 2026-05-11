@@ -13,11 +13,11 @@ type WhisperVerboseJson = {
 };
 
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = request.headers.get("x-openai-key") || process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: "OPENAI_API_KEY is not configured. Add it to .env.local and restart the app." },
+      { error: "No OpenAI API key. Enter your key in the sidebar settings." },
       { status: 503 },
     );
   }

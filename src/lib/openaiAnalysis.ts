@@ -3,13 +3,18 @@ import type { GeneratedOutput, InterviewSession, TranscriptSegment } from "@/typ
 export async function analyzeInterviewWithOpenAI({
   session,
   transcriptSegments,
+  apiKey,
 }: {
   session: InterviewSession;
   transcriptSegments: TranscriptSegment[];
+  apiKey?: string;
 }): Promise<GeneratedOutput> {
+  const headers: HeadersInit = { "Content-Type": "application/json" };
+  if (apiKey) headers["X-OpenAI-Key"] = apiKey;
+
   const response = await fetch("/api/analysis", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ session, transcriptSegments }),
   });
 
