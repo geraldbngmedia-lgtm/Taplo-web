@@ -93,7 +93,7 @@ export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
           <div className="lp-nav-cta">
             <a
               className="lp-btn-pill lp-light"
-              href="https://github.com/geraldbngmedia-lgtm/Taplo-desktop/releases/latest/download/Taplo%20Setup%200.1.0.exe"
+              href="https://github.com/geraldbngmedia-lgtm/Taplo-desktop/releases/latest/download/Taplo.Setup.0.1.0.exe"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -116,7 +116,7 @@ export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
           <div className="lp-hero-ctas">
             <a
               className="lp-btn-pill lp-light"
-              href="https://github.com/geraldbngmedia-lgtm/Taplo-desktop/releases/latest/download/Taplo%20Setup%200.1.0.exe"
+              href="https://github.com/geraldbngmedia-lgtm/Taplo-desktop/releases/latest/download/Taplo.Setup.0.1.0.exe"
               target="_blank"
               rel="noopener noreferrer"
             >
