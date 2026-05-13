@@ -90,7 +90,53 @@
 .lp-nav-links a { transition: color .15s; }
 .lp-nav-links a:hover { color: var(--lp-ink); }
 .lp-nav-cta { display: flex; align-items: center; gap: 10px; justify-self: end; }
-@media (max-width: 760px) { .lp-nav-links { display: none; } }
+@media (max-width: 760px) { .lp-nav-links { display: none; } .lp-nav-dl { display: none; } }
+
+/* ============ HAMBURGER ============ */
+.lp-hamburger {
+  display: none;
+  flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+  width: 40px; height: 40px; background: none; border: none; padding: 4px; cursor: pointer;
+}
+.lp-hamburger span {
+  display: block; width: 22px; height: 2px;
+  background: var(--lp-ink); border-radius: 2px;
+  transition: transform .25s ease, opacity .2s ease;
+  transform-origin: center;
+}
+.lp-hamburger.lp-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.lp-hamburger.lp-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.lp-hamburger.lp-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+@media (max-width: 760px) { .lp-hamburger { display: flex; } }
+
+/* ============ MOBILE MENU ============ */
+.lp-mobile-menu {
+  position: fixed; top: 88px; left: 0; right: 0; z-index: 49;
+  background: var(--lp-bg); border-bottom: 1px solid var(--lp-line);
+  display: flex; flex-direction: column;
+  padding: 0 var(--lp-pad);
+  max-height: 0; overflow: hidden;
+  transition: max-height .35s ease, padding .35s ease;
+}
+.lp-mobile-menu.lp-open {
+  max-height: 420px;
+  padding: 16px var(--lp-pad) 24px;
+}
+.lp-mobile-menu a {
+  font-size: 17px; font-weight: 500; color: var(--lp-ink-2);
+  padding: 14px 0; border-bottom: 1px solid var(--lp-line-2);
+  display: flex; align-items: center; gap: 8px;
+  transition: color .15s;
+}
+.lp-mobile-menu a:last-child { border-bottom: none; }
+.lp-mobile-menu a:hover { color: var(--lp-ink); }
+.lp-mobile-dl {
+  margin-top: 8px;
+  background: var(--lp-ink) !important; color: #fff !important;
+  justify-content: center; border-radius: 999px;
+  padding: 14px 24px !important; border-bottom: none !important;
+}
+@media (min-width: 761px) { .lp-mobile-menu { display: none; } }
 
 /* ============ BUTTONS ============ */
 .lp-btn {

@@ -17,6 +17,7 @@ const faqs = [
 
 export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const io = new IntersectionObserver(
@@ -43,14 +44,34 @@ export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
               <a href="#faq">FAQ</a>
             </div>
             <div className="lp-nav-cta">
-              <a className="lp-btn-pill lp-light" href={DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+              <a className="lp-btn-pill lp-light lp-nav-dl" href={DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Download
               </a>
+              <button
+                className={`lp-hamburger${menuOpen ? " lp-open" : ""}`}
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="Toggle menu"
+                type="button"
+              >
+                <span /><span /><span />
+              </button>
             </div>
           </div>
         </div>
       </nav>
+
+      {/* MOBILE MENU */}
+      <div className={`lp-mobile-menu${menuOpen ? " lp-open" : ""}`}>
+        <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
+        <a href="#how" onClick={() => setMenuOpen(false)}>How it works</a>
+        <a href="#privacy" onClick={() => setMenuOpen(false)}>Security</a>
+        <a href="#faq" onClick={() => setMenuOpen(false)}>FAQ</a>
+        <a className="lp-mobile-dl" href={DOWNLOAD_URL} target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Taplo free
+        </a>
+      </div>
 
       {/* HERO */}
       <section className="lp-hero">
