@@ -100,11 +100,6 @@ export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
               Watch how it works
             </a>
           </div>
-          <div className="lp-download-meta">
-            <span>No credit card</span>
-            <span className="lp-dot" />
-            <span>Windows · macOS coming soon</span>
-          </div>
         </div>
 
         {/* Hero product mock */}

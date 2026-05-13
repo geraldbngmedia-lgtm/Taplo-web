@@ -90,7 +90,7 @@
 .lp-nav-links a { transition: color .15s; }
 .lp-nav-links a:hover { color: var(--lp-ink); }
 .lp-nav-cta { display: flex; align-items: center; gap: 10px; justify-self: end; }
-.lp-nav-dl { display: none; }
+.lp-nav-dl { display: none !important; }
 @media (max-width: 760px) { .lp-nav-links { display: none; } }
 
 /* ============ HAMBURGER ============ */
