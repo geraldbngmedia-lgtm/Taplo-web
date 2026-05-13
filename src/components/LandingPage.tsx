@@ -62,6 +62,7 @@ export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
       </nav>
 
       {/* MOBILE MENU */}
+      <div className={`lp-mobile-backdrop${menuOpen ? " lp-open" : ""}`} onClick={() => setMenuOpen(false)} />
       <div className={`lp-mobile-menu${menuOpen ? " lp-open" : ""}`}>
         <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
         <a href="#how" onClick={() => setMenuOpen(false)}>How it works</a>
