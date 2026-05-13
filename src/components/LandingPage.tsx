@@ -63,6 +63,7 @@ export function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
                 <path d="M2,9 C30,5 60,11 100,8 C140,5 170,10 198,7 L198,11 C170,14 140,9 100,12 C60,15 30,9 2,13 Z" />
               </svg>
             </span>
+            <br />On your desktop. Without a bot.
           </h1>
           <p className="lp-hero-sub">
             Taplo captures and transcribes every interview locally, then drafts structured, evidence-linked notes for hiring teams. Always private and secure.
