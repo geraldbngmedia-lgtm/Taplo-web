@@ -4,6 +4,18 @@ import type { Candidate, Project, WorkspaceData } from "@/types/interview";
 
 const STORAGE_KEY = "interview-intelligence-workspace:v1";
 
+type DesktopWorkspaceApi = {
+  getDesktopSources?: () => Promise<Array<{ id: string; name: string }>>;
+  loadWorkspaceData?: () => Promise<Partial<WorkspaceData> | null>;
+  saveWorkspaceData?: (data: WorkspaceData) => Promise<{ ok: boolean }>;
+};
+
+declare global {
+  interface Window {
+    taplo?: DesktopWorkspaceApi;
+  }
+}
+
 export function loadWorkspaceData(): WorkspaceData {
   if (typeof window === "undefined") return initialWorkspaceData;
 
@@ -20,6 +32,22 @@ export function loadWorkspaceData(): WorkspaceData {
 export function saveWorkspaceData(data: WorkspaceData) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+export async function loadWorkspaceDataFromStorage(): Promise<WorkspaceData> {
+  if (typeof window === "undefined") return initialWorkspaceData;
+
+  const desktopData = await window.taplo?.loadWorkspaceData?.();
+  if (desktopData) return normalizeWorkspaceData(desktopData);
+
+  return loadWorkspaceData();
+}
+
+export async function saveWorkspaceDataToStorage(data: WorkspaceData) {
+  if (typeof window === "undefined") return;
+
+  saveWorkspaceData(data);
+  await window.taplo?.saveWorkspaceData?.(data);
 }
 
 function normalizeWorkspaceData(data: Partial<WorkspaceData>): WorkspaceData {

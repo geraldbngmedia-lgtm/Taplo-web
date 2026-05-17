@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { app, BrowserWindow, shell, session } = require("electron/main");
+const { app, BrowserWindow, shell, session, ipcMain, desktopCapturer } = require("electron/main");
 const path = require("path");
 const http = require("http");
 const net = require("net");
 const { spawn } = require("child_process");
+const {
+  closeDatabase,
+  loadWorkspaceData,
+  saveWorkspaceData,
+} = require("./database");
 
 let nextServerProcess = null;
 let cachedServerUrl = null;
@@ -126,9 +131,17 @@ function killServer() {
     nextServerProcess.kill();
     nextServerProcess = null;
   }
+  closeDatabase();
 }
 
 app.whenReady().then(async () => {
+  ipcMain.handle("get-desktop-sources", async () => {
+    const sources = await desktopCapturer.getSources({ types: ["screen"] });
+    return sources.map((s) => ({ id: s.id, name: s.name }));
+  });
+  ipcMain.handle("workspace:load", async () => loadWorkspaceData(app));
+  ipcMain.handle("workspace:save", async (_event, data) => saveWorkspaceData(app, data));
+
   applySecurityHeaders();
   const url = await getServerUrl();
   createWindow(url);

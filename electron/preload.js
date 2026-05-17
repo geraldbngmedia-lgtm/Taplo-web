@@ -1,2 +1,7 @@
-// Reserved for future desktop-only APIs such as file-backed SQLite or secure
-// local audio storage. Keep renderer access narrow and explicit.
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("taplo", {
+  getDesktopSources: () => ipcRenderer.invoke("get-desktop-sources"),
+  loadWorkspaceData: () => ipcRenderer.invoke("workspace:load"),
+  saveWorkspaceData: (data) => ipcRenderer.invoke("workspace:save", data),
+});
