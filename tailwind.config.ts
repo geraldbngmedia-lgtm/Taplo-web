@@ -26,14 +26,18 @@ const config: Config = {
         taploBlueDark: "#2878d7",
         taploCoral: "#F47A5A",
         taploCoralDark: "#e8694a",
+        taploSidebar: "#FAFAF7",
         pine: "#2878d7",
         plum: "#5b6b84",
-        brass: "#F47A5A"
+        brass: "#F47A5A",
+        success: "#22c55e",
+        warning: "#f59e0b",
       },
       boxShadow: {
-        soft: "0 8px 24px rgba(17, 17, 17, 0.06)",
-        lift: "0 24px 70px rgba(17, 17, 17, 0.12)"
-      }
+        soft: "0 1px 2px rgba(30,20,10,0.04), 0 8px 24px rgba(30,20,10,0.06)",
+        lift: "0 12px 40px rgba(30,20,10,0.14)",
+        float: "0 12px 40px rgba(30,20,10,0.14)",
+      },
     },
   },
   plugins: [],

@@ -200,7 +200,7 @@
   position: absolute; z-index: -1;
   left: -0.08em; width: calc(100% + 0.16em);
   bottom: -0.02em; height: 0.32em;
-  color: var(--lp-moss); opacity: 0.32; overflow: visible;
+  color: var(--lp-moss); opacity: 1; overflow: visible;
   transform-origin: left center; transform: scaleX(0);
   animation: lp-mark-draw .6s cubic-bezier(.55,.1,.3,1) .35s forwards;
 }

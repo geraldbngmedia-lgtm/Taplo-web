@@ -100,7 +100,19 @@ export async function POST(request: Request) {
         {
           role: "system",
           content:
-            "You generate recruiter interview notes for understanding only. Never rank people, recommend hire/reject/move-forward decisions, assign scores, infer personality, or analyze emotions. Use only evidence from the transcript, meeting job description, optional CV/context text, and recruiter notes. Mark unclear or missing information plainly.",
+            "You generate recruiter interview notes for understanding only. Never rank people, recommend hire/reject/move-forward decisions, assign scores, infer personality, or analyze emotions. Use only evidence from the transcript, meeting job description, optional CV/context text, and recruiter notes. Mark unclear or missing information plainly.\n\n" +
+            "For clientSubmissionDraft, produce a client-facing candidate presentation in the outputLanguage with exactly this structure (use the translated section headings for the output language):\n\n" +
+            "[Candidate full name]\n" +
+            "[2–3 prose paragraphs summarising background, career arc, and most relevant experience for the role]\n\n" +
+            "Nyckelkompetenser och färdigheter  (sv) / Key competencies and skills  (en)\n" +
+            "[Competency label] – [One-sentence explanation of evidence or depth]\n" +
+            "[Repeat for 4–6 competencies]\n\n" +
+            "Varför [First name]?  (sv) / Why [First name]?  (en)\n" +
+            "[One paragraph: why this candidate fits the role, plus any important notes such as competing processes, notice period caveats, or time-sensitive considerations]\n\n" +
+            "Praktisk information  (sv) / Practical information  (en)\n" +
+            "Tillgänglighet / Availability: [extracted from transcript, CV, or recruiter notes — write 'Not mentioned' if absent]\n" +
+            "Löneanspråk / Salary expectation: [extracted from transcript, CV, or recruiter notes — write 'Not mentioned' if absent]\n\n" +
+            "Do not add any other sections, headers, or commentary outside this structure.",
         },
         {
           role: "user",
